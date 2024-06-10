@@ -1,9 +1,10 @@
-
 import numpy as np
 import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+import tqdm
 
 class InterpolateSparse2d(nn.Module):
     """ Efficiently interpolate tensor at given sparse 2D positions. """ 
@@ -29,6 +30,7 @@ class InterpolateSparse2d(nn.Module):
         grid = self.normgrid(pos, H, W).unsqueeze(-2).to(x.dtype)
         x = F.grid_sample(x, grid, mode = self.mode , align_corners = False)
         return x.permute(0,2,3,1).squeeze(-2)
+    
 
 class BasicLayer(nn.Module):
 	"""
@@ -174,13 +176,14 @@ class XFeatModel(nn.Module):
 
 		return feats, keypoints, heatmap
 	
+
 class XFeat(nn.Module):
 	""" 
 		Implements the inference module for XFeat. 
 		It supports inference for both sparse and semi-dense feature extraction & matching.
 	"""
 
-	def __init__(self, weights = os.path.abspath(os.path.dirname(__file__)) + '/xfeat.pt', top_k = 4096):
+	def __init__(self, weights = "/home/ubuntu/Desktop/xfeat-main/xfeat.pt", top_k = 4096):
 		super().__init__()
 		self.dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 		self.net = XFeatModel().to(self.dev).eval()
